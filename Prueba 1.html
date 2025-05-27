@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pedido - La Guadalupana</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather&family=Playfair+Display&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Merriweather', serif;
+      background: #f7f3f0;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #7b3e19;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header img {
+      height: 50px;
+    }
+    main {
+      max-width: 1000px;
+      margin: auto;
+      padding: 2rem;
+    }
+    h2 {
+      font-family: 'Playfair Display', serif;
+      color: #7b3e19;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    .radio-group {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .product-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      align-items: center;
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 10px;
+      background-color: #fff;
+    }
+    .product-row select, .product-row input {
+      flex: 1;
+    }
+    .product-row button {
+      background: transparent;
+      border: none;
+      color: red;
+      font-size: 1.2rem;
+    }
+    .button {
+      background: #7b3e19;
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .button:hover {
+      background: #5a2d13;
+    }
+    .hidden {
+      display: none;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 15px;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .complementos label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .success-message {
+      background: #e6f4ea;
+      border: 1px solid #b2dfdb;
+      color: #2e7d32;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 2rem;
+    }
+    @media (max-width: 600px) {
+      .product-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>La Guadalupana</h1>
+    <img src="https://github.com/NachFig19/Practica/blob/7f346f5394976bd08edd3633bff36d5478df6f88/Imagen%20Pr%C3%A1ctica.png" alt="Logo">
+  </header>
+  <main>
+    <form id="pedidoForm">
+      <h2>Formulario de Pedido</h2>
+      <div class="form-group">
+        <label>Medio de Entrega</label>
+        <div class="radio-group">
+          <label><input type="radio" name="entrega" value="mostrador" checked> En Mostrador</label>
+          <label><input type="radio" name="entrega" value="domicilio"> A Domicilio</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Número de Teléfono</label>
+        <input type="tel" id="telefono" maxlength="10" required pattern="\\d{10}" placeholder="10 dígitos">
+      </div>
+
+      <div class="form-group hidden" id="campoDomicilio">
+        <label>Domicilio Completo</label>
+        <input type="text" id="domicilio">
+      </div>
+      <div class="form-group hidden" id="campoReferencias">
+        <label>Referencias de Domicilio</label>
+        <input type="text" id="referencias">
+      </div>
+      <div class="form-group" id="campoNombre">
+        <label>Nombre para Recoger</label>
+        <input type="text" id="nombre">
+      </div>
+
+      <h3>Productos Cárnicos</h3>
+      <div id="productosContainer"></div>
+      <button type="button" class="button" onclick="agregarProducto()"><i class="fas fa-plus"></i> Agregar Otro Producto</button>
+
+      <div class="form-group">
+        <label>Comentarios Adicionales</label>
+        <textarea id="comentarios" rows="4" placeholder="Ingrese cualquier instrucción especial..."></textarea>
+      </div>
+
+      <button type="submit" class="button">Realizar Pedido</button>
+    </form>
+
+    <div id="complementosSection" class="hidden">
+      <h2>Productos Complementarios</h2>
+      <div class="complementos">
+        <label><input type="checkbox" value="Salsa de chipotle"> Salsa de chipotle</label>
+        <label><input type="checkbox" value="100 grs de chicharrón"> 100 grs de chicharrón</label>
+        <label><input type="checkbox" value="100 grs de tocino"> 100 grs de tocino</label>
+        <label><input type="checkbox" value="100 grs de jamón"> 100 grs de jamón de pavo/lomo</label>
+        <label><input type="checkbox" value="100 grs de queso de puerco"> 100 grs de queso de puerco</label>
+        <label><input type="checkbox" value="Tortillas de harina"> Tortillas de harina</label>
+        <label><input type="checkbox" value="Tostadas de maíz"> Tostadas de maíz</label>
+        <label><input type="checkbox" value="Totopos de maíz"> Totopos de maíz</label>
+        <label><input type="checkbox" value="Bolsa de 1 kg de maíz pozolero"> Bolsa de 1 kg de maíz pozolero</label>
+        <label><input type="checkbox" value="Condimento para carnes"> Condimento para carnes</label>
+      </div>
+      <button class="button" onclick="finalizarPedido()">Confirmar Pedido Final</button>
+    </div>
+
+    <div id="mensajeExito" class="success-message hidden"></div>
+  </main>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalContenido">
+      <!-- Contenido dinámico -->
+    </div>
+  </div>
+
+  <script>
+    const productosContainer = document.getElementById("productosContainer");
+    const campoDomicilio = document.getElementById("campoDomicilio");
+    const campoReferencias = document.getElementById("campoReferencias");
+    const campoNombre = document.getElementById("campoNombre");
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalContenido = document.getElementById("modalContenido");
+    const formulario = document.getElementById("pedidoForm");
+    const complementosSection = document.getElementById("complementosSection");
+    const mensajeExito = document.getElementById("mensajeExito");
+    const presentaciones = {
+      "Res": ["Filete", "Molida", "Bistec"],
+      "Cerdo": ["Chuleta", "Costilla", "Pierna"],
+      "Pollo": ["Pechuga", "Muslo", "Entero"],
+      "Embutidos": ["Salchicha", "Chorizo", "Jamón"]
+    };
+
+    document.querySelectorAll('input[name="entrega"]').forEach(radio => {
+      radio.addEventListener("change", toggleCamposEntrega);
+    });
+
+    function toggleCamposEntrega() {
+      const entrega = document.querySelector('input[name="entrega"]:checked').value;
+      if (entrega === "domicilio") {
+        campoDomicilio.classList.remove("hidden");
+        campoReferencias.classList.remove("hidden");
+        campoDomicilio.querySelector("input").required = true;
+        campoReferencias.querySelector("input").required = true;
+        campoNombre.classList.add("hidden");
+      } else {
+        campoDomicilio.classList.add("hidden");
+        campoReferencias.classList.add("hidden");
+        campoDomicilio.querySelector("input").required = false;
+        campoReferencias.querySelector("input").required = false;
+        campoNombre.classList.remove("hidden");
+      }
+    }
+
+    function agregarProducto() {
+      const div = document.createElement("div");
+      div.className = "product-row";
+      div.innerHTML = `
+        <select onchange="actualizarPresentacion(this)">
+          ${Object.keys(presentaciones).map(tipo => `<option value="${tipo}">${tipo}</option>`).join("")}
+        </select>
+        <select></select>
+        <input type="number" placeholder="Cantidad (kg, gr, piezas)">
+        <button type="button" onclick="eliminarProducto(this)"><i class="fas fa-trash"></i></button>
+      `;
+      productosContainer.appendChild(div);
+      actualizarPresentacion(div.querySelector("select"));
+    }
+
+    function eliminarProducto(btn) {
+      if (productosContainer.children.length > 1) {
+        btn.parentElement.remove();
+      }
+    }
+
+    function actualizarPresentacion(selectTipo) {
+      const tipo = selectTipo.value;
+      const selectPresentacion = selectTipo.nextElementSibling;
+      selectPresentacion.innerHTML = presentaciones[tipo].map(p => `<option value="${p}">${p}</option>`).join("");
+    }
+
+    formulario.addEventListener("submit", e => {
+      e.preventDefault();
+      const tel = document.getElementById("telefono").value;
+      if (!/^\d{10}$/.test(tel)) {
+        alert("El número de teléfono debe tener exactamente 10 dígitos.");
+        return;
+      }
+      mostrarResumen();
+    });
+
+    function mostrarResumen() {
+      let resumen = `<h3>Resumen del Pedido</h3><ul>`;
+      const entrega = document.querySelector('input[name="entrega"]:checked').value;
+      const nombre = document.getElementById("nombre").value;
+      const domicilio = document.getElementById("domicilio").value;
+      const referencias = document.getElementById("referencias").value;
+      const tel = document.getElementById("telefono").value;
+      resumen += `<li><strong>Teléfono:</strong> ${tel}</li>`;
+      if (entrega === "domicilio") {
+        resumen += `<li><strong>Domicilio:</strong> ${domicilio}</li><li><strong>Referencias:</strong> ${referencias}</li>`;
+      } else {
+        resumen += `<li><strong>Nombre para recoger:</strong> ${nombre}</li>`;
+      }
+
+      resumen += `<li><strong>Productos:</strong><ul>`;
+      productosContainer.querySelectorAll(".product-row").forEach(row => {
+        const tipo = row.children[0].value;
+        const presentacion = row.children[1].value;
+        const cantidad = row.children[2].value;
+        resumen += `<li>${tipo} - ${presentacion} - ${cantidad}</li>`;
+      });
+      resumen += `</ul></li>`;
+      resumen += `<li><strong>Comentarios:</strong> ${document.getElementById("comentarios").value}</li></ul>`;
+      resumen += `<button class="button" onclick="confirmarPedido()">Confirmar Pedido</button>
+                  <button class="button" onclick="cerrarModal()">Editar Pedido</button>`;
+      modalContenido.innerHTML = resumen;
+      modalOverlay.style.display = "flex";
+    }
+
+    function cerrarModal() {
+      modalOverlay.style.display = "none";
+    }
+
+    function confirmarPedido() {
+      modalOverlay.style.display = "none";
+      formulario.classList.add("hidden");
+      complementosSection.classList.remove("hidden");
+    }
+
+    function finalizarPedido() {
+      const entrega = document.querySelector('input[name="entrega"]:checked').value;
+      const nombre = document.getElementById("nombre").value;
+      const tel = document.getElementById("telefono").value;
+      const folio = `${(nombre[0] || "X").toUpperCase()}${tel.slice(-4)}${entrega === "domicilio" ? "DOM" : "MOS"}`;
+      let texto = `¡Su pedido ha sido recibido con éxito! Le contactaremos pronto para confirmar los detalles y la entrega.<br><br>
+        <strong>Folio:</strong> ${folio}<br>`;
+      if (entrega === "mostrador") {
+        texto += `Ubicación: 9 sur 2709 A, Colonia Chulavista. Puebla, Puebla. México.<br>`;
+      }
+      texto += `Teléfono Fijo: 2222438926<br>WhatsApp: 2226857926<br>`;
+      mensajeExito.innerHTML = texto;
+      mensajeExito.classList.remove("hidden");
+      generarPDF(folio);
+      setTimeout(() => location.reload(), 10000);
+    }
+
+    function generarPDF(folio) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
+      doc.text("Comprobante de Pedido - La Guadalupana", 10, y);
+      y += 10;
+      doc.text(`Folio: ${folio}`, 10, y);
+      y += 10;
+      doc.text(`Teléfono: ${document.getElementById("telefono").value}`, 10, y);
+      y += 10;
+      if (!campoDomicilio.classList.contains("hidden")) {
+        doc.text(`Domicilio: ${document.getElementById("domicilio").value}`, 10, y);
+        y += 10;
+        doc.text(`Referencias: ${document.getElementById("referencias").value}`, 10, y);
+        y += 10;
+      } else {
+        doc.text(`Nombre para recoger: ${document.getElementById("nombre").value}`, 10, y);
+        y += 10;
+      }
+      productosContainer.querySelectorAll(".product-row").forEach(row => {
+        const tipo = row.children[0].value;
+        const presentacion = row.children[1].value;
+        const cantidad = row.children[2].value;
+        doc.text(`Producto: ${tipo} - ${presentacion} - ${cantidad}`, 10, y);
+        y += 10;
+      });
+      const comentarios = document.getElementById("comentarios").value;
+      if (comentarios) {
+        doc.text(`Comentarios: ${comentarios}`, 10, y);
+        y += 10;
+      }
+      const complementos = [...document.querySelectorAll(".complementos input:checked")].map(c => c.value);
+      if (complementos.length) {
+        doc.text("Complementos:", 10, y);
+        y += 10;
+        complementos.forEach(c => {
+          doc.text(`- ${c}`, 10, y);
+          y += 10;
+        });
+      }
+      doc.save(`Pedido-${folio}.pdf`);
+    }
+
+    // Inicializar con un producto
+    agregarProducto();
+    toggleCamposEntrega();
+  </script>
+</body>
+</html>
