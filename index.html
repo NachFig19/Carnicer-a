@@ -374,5 +374,28 @@ header img {
     agregarProducto();
     toggleCamposEntrega();
   </script>
+  <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyDoKxB2jHv_XVLR8pAvAas07vsYtLXjFxo",
+    authDomain: "practica-carniceria.firebaseapp.com",
+    projectId: "practica-carniceria",
+    storageBucket: "practica-carniceria.firebasestorage.app",
+    messagingSenderId: "452974626443",
+    appId: "1:452974626443:web:15bdb08acdd4c6d12f768e",
+    measurementId: "G-GYYGG83TXQ"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </body>
 </html>
